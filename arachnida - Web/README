@@ -1,0 +1,55 @@
+# 🕷️ SPIDER  
+_A recursive image downloader and web crawler._
+
+---
+
+## 🧠 What It Does
+
+**SPIDER** crawls through a website starting from a given URL and downloads all the image files it finds.  
+If the `-r` option is enabled, it will recursively follow links on the site up to a given depth.
+
+---
+
+## 🔧 Features
+
+- Extracts and downloads images (`.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`)
+- Optionally follows links to crawl deeper into websites
+- Saves images into a custom or default folder (`./data`)
+- Uses BeautifulSoup to parse HTML
+- Filters duplicate visits with `visited_urls` set
+
+---
+
+## 🚀 Usage
+
+```bash
+python3 ./spider [options] URL
+
+
+# 🦂 SCORPION  
+_A command-line EXIF metadata viewer for images._
+
+---
+
+## 🧠 What It Does
+
+**SCORPION** is a Python tool that extracts and displays **EXIF metadata** from image files (like `.jpg`). It provides technical details about how and where a photo was taken — including camera make/model, exposure, ISO, GPS coordinates, and more.
+
+---
+
+## 🧾 Features
+
+- Displays **image format**, size, and mode
+- Shows **camera information** (make, model, orientation)
+- Reads **camera settings** (ISO, flash, exposure time, f-number)
+- Extracts **GPS location data** (latitude, longitude, Google Maps link)
+- Lists **software info**, EXIF version, white balance, and metering mode
+- Gracefully handles missing or corrupt EXIF data
+
+---
+
+## 🚀 Usage
+
+```bash
+python3 ./scorpion IMAGE1 [IMAGE2 ...]
+

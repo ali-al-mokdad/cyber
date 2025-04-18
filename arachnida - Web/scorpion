@@ -3,6 +3,16 @@ from PIL import Image
 import piexif
 import os
 
+def convert_gps(coord, ref):
+    """Helper to convert GPS coordinates to decimal format."""
+    if not coord:
+        return None
+    degrees, minutes, seconds = [x[0] / x[1] for x in coord]
+    decimal = degrees + (minutes / 60.0) + (seconds / 3600.0)
+    if ref in ['S', 'W']:
+        decimal *= -1
+    return round(decimal, 6)
+
 def display_metadata(file_path):
     print(f"\n[File: {file_path}]")
     if not os.path.exists(file_path):
@@ -18,24 +28,60 @@ def display_metadata(file_path):
             exif_data = img.info.get('exif')
             if exif_data:
                 exif_dict = piexif.load(exif_data)
-                date_time = exif_dict['Exif'].get(piexif.ExifIFD.DateTimeOriginal)
-                if date_time:
-                    print(f"  Creation Date: {date_time.decode()}")
-                else:
-                    print("  Creation Date: Not available")
+                
+                # === BASIC INFO ===
+                print("\n  --- Basic Info ---")
+                make = exif_dict["0th"].get(piexif.ImageIFD.Make, b"").decode(errors='ignore')
+                model = exif_dict["0th"].get(piexif.ImageIFD.Model, b"").decode(errors='ignore')
+                datetime = exif_dict["Exif"].get(piexif.ExifIFD.DateTimeOriginal, b"").decode(errors='ignore')
+                orientation = exif_dict["0th"].get(piexif.ImageIFD.Orientation)
 
-                print("  --- EXIF Data ---")
-                for ifd_name in exif_dict:
-                    for tag in exif_dict[ifd_name]:
-                        try:
-                            value = exif_dict[ifd_name][tag]
-                            if isinstance(value, bytes):
-                                value = value.decode(errors='ignore')
-                            print(f"    {piexif.TAGS[ifd_name][tag]['name']}: {value}")
-                        except:
-                            continue
+                print(f"    Camera Make: {make}")
+                print(f"    Camera Model: {model}")
+                print(f"    Creation Date: {datetime if datetime else 'Not available'}")
+                print(f"    Orientation: {orientation if orientation else 'Not available'}")
+
+                # === CAMERA SETTINGS ===
+                print("\n  --- Camera Settings ---")
+                exposure = exif_dict["Exif"].get(piexif.ExifIFD.ExposureTime)
+                fnumber = exif_dict["Exif"].get(piexif.ExifIFD.FNumber)
+                iso = exif_dict["Exif"].get(piexif.ExifIFD.ISOSpeedRatings)
+                flash = exif_dict["Exif"].get(piexif.ExifIFD.Flash)
+                focal_length = exif_dict["Exif"].get(piexif.ExifIFD.FocalLength)
+
+                print(f"    Exposure Time: {exposure[0]}/{exposure[1]}" if exposure else "    Exposure Time: N/A")
+                print(f"    FNumber: f/{fnumber[0]/fnumber[1]:.1f}" if fnumber else "    FNumber: N/A")
+                print(f"    ISO: {iso if iso else 'N/A'}")
+                print(f"    Flash: {'Yes' if flash else 'No' if flash == 0 else 'N/A'}")
+                print(f"    Focal Length: {focal_length[0]/focal_length[1]:.1f} mm" if focal_length else "    Focal Length: N/A")
+
+                # === GPS INFO ===
+                gps = exif_dict.get("GPS")
+                if gps and piexif.GPSIFD.GPSLatitude in gps:
+                    print("\n  --- GPS Info ---")
+                    lat = convert_gps(gps.get(piexif.GPSIFD.GPSLatitude), gps.get(piexif.GPSIFD.GPSLatitudeRef, b"N").decode())
+                    lon = convert_gps(gps.get(piexif.GPSIFD.GPSLongitude), gps.get(piexif.GPSIFD.GPSLongitudeRef, b"E").decode())
+                    print(f"    Latitude: {lat}")
+                    print(f"    Longitude: {lon}")
+                    print(f"    Google Maps: https://maps.google.com/?q={lat},{lon}")
+                else:
+                    print("\n  --- GPS Info ---")
+                    print("    No GPS data available.")
+
+                # === FILE & TECHNICAL DETAILS ===
+                print("\n  --- File & Technical Details ---")
+                software = exif_dict["0th"].get(piexif.ImageIFD.Software, b"").decode(errors='ignore')
+                exif_version = exif_dict["Exif"].get(piexif.ExifIFD.ExifVersion)
+                white_balance = exif_dict["Exif"].get(piexif.ExifIFD.WhiteBalance)
+                metering_mode = exif_dict["Exif"].get(piexif.ExifIFD.MeteringMode)
+
+                print(f"    Software: {software}")
+                print(f"    EXIF Version: {exif_version.decode() if exif_version else 'N/A'}")
+                print(f"    White Balance: {'Auto' if white_balance == 0 else 'Manual' if white_balance == 1 else 'N/A'}")
+                print(f"    Metering Mode: {metering_mode if metering_mode is not None else 'N/A'}")
+
             else:
-                print("  No EXIF data found.")
+                print("  --- No EXIF metadata found. ---")
 
     except Exception as e:
         print(f"  [!] Failed to process image: {e}")

@@ -51,6 +51,9 @@ def crawl(url, folder_path, depth, max_depth):
                 crawl(full_link, folder_path, depth + 1, max_depth)
 
 def main():
+    if len(sys.argv) < 2:
+        print("Usage: ./spider [-rlp] URL or use ./spider -h ")
+        return
     parser = argparse.ArgumentParser(description="Recursive image spider")
     parser.add_argument("url", help="Target URL to start crawling")
     parser.add_argument("-r", action="store_true", help="Enable recursive crawling")
