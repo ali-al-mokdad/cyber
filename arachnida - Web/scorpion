@@ -1,0 +1,53 @@
+import sys
+from PIL import Image
+import piexif
+import os
+
+def display_metadata(file_path):
+    print(f"\n[File: {file_path}]")
+    if not os.path.exists(file_path):
+        print("  [!] File not found.")
+        return
+
+    try:
+        with Image.open(file_path) as img:
+            print(f"  Format: {img.format}")
+            print(f"  Size: {img.size}")
+            print(f"  Mode: {img.mode}")
+            
+            exif_data = img.info.get('exif')
+            if exif_data:
+                exif_dict = piexif.load(exif_data)
+                date_time = exif_dict['Exif'].get(piexif.ExifIFD.DateTimeOriginal)
+                if date_time:
+                    print(f"  Creation Date: {date_time.decode()}")
+                else:
+                    print("  Creation Date: Not available")
+
+                print("  --- EXIF Data ---")
+                for ifd_name in exif_dict:
+                    for tag in exif_dict[ifd_name]:
+                        try:
+                            value = exif_dict[ifd_name][tag]
+                            if isinstance(value, bytes):
+                                value = value.decode(errors='ignore')
+                            print(f"    {piexif.TAGS[ifd_name][tag]['name']}: {value}")
+                        except:
+                            continue
+            else:
+                print("  No EXIF data found.")
+
+    except Exception as e:
+        print(f"  [!] Failed to process image: {e}")
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: ./scorpion FILE1 [FILE2 ...]")
+        return
+
+    for file_path in sys.argv[1:]:
+        display_metadata(file_path)
+
+if __name__ == "__main__":
+    main()
+
